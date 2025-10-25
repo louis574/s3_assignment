@@ -43,25 +43,46 @@ void parse_command(char line[], char *args[], int *argsc)
 }
 
 ///Launch related functions
-void child(char *args[], int argsc)
+void child(char* args[], int argsc)
 {
     ///Implement this function:
+
+    if(execvp(args[0],args) == -1){
+        fprintf(stderr, "execvp launch failed\n");
+        exit(1);
+    }
+
 
     ///Use execvp to load the binary 
     ///of the command specified in args[ARG_PROGNAME].
     ///For reference, see the code in lecture 3.
 }
 
-void launch_program(char *args[], int argsc)
+void launch_program(char* args[], int argsc)
 {
     ///Implement this function:
+    if(argsc == 1 && strcmp(args[0],"exit") == 0){
+        exit(0);
+    }
 
     ///fork() a child process.
     ///In the child part of the code,
     ///call child(args, argv)
     ///For reference, see the code in lecture 2.
+    int rc = fork();
+    if (rc < 0){
+        fprintf(stderr, "fork failed\n");
+        exit(1);
+    }
+    else if (rc == 0){ //child
+        child(args, argsc);
+    }
+    else{ //parent
+        wait(NULL);
+    }
 
     ///Handle the 'exit' command;
     ///so that the shell, not the child process,
     ///exits.
+
 }
