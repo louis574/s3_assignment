@@ -86,3 +86,33 @@ void launch_program(char* args[], int argsc)
     ///exits.
 
 }
+
+void launch_program_with_redirection(char* args[], int argsc){
+    int red_index;
+    int null_index;
+
+    for(int i = 0; *args[i] != NULL ; i++){
+        if(*args[i][0] == '<' || *args[i][0] == '>'){
+            red_index = i;
+        }
+        if(*args[i+1] == NULL){
+            null_index = i+1;
+        }
+    }
+
+    char* redirect = args[red_index];
+
+
+    char* first[red_index+1];
+    for(int i = 0; i<red_index; i++){
+        first[i] = args[i];
+    }
+    first
+    char* second[null_index-red_index-1];
+    for(int i = 0; i<null_index;i++){
+
+    }
+
+
+
+}
