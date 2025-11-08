@@ -15,7 +15,7 @@ int main(int argc, char *argv[]){
     while (1) {
         read_command_line(line);
 
-        if(redirection_detect(line)){
+        if(command_with_redirection(line)){
             fprintf(stdout, "Detected\n");
         }
 
