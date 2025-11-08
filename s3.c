@@ -87,6 +87,108 @@ void launch_program(char* args[], int argsc)
 
 } 
 
+
+
+void launch_program_with_redirection(char *args[], int argsc){
+    char direction,operation;
+
+    redirect_parse(args, argsc, &direction, &operation);
+
+    char* child_instruction[argsc-1];
+    for(int i = 0; i < argsc-2; i++){
+        child_instruction[i] = args[i];
+    }
+    child_instruction[argsc-2] = NULL;
+
+    char* file = args[argsc-1];
+
+
+    int rc = fork();
+    if (rc < 0){
+        fprintf(stderr, "fork failed\n");
+        exit(1);
+    }
+    else if (rc == 0){ //child
+        if(direction == 'r'){
+            child_with_input_redirected(child_instruction, file, operation);
+
+        }
+        else if(direction == 'w'){
+            child_with_output_redirected(child_instruction, file, operation);
+
+        }
+    }
+    else{ //parent
+        wait(NULL);
+    }
+
+    
+
+
+}
+
+void child_with_input_redirected(char *instruction[], char* file, char operation){
+    int fd = open(file, O_RDONLY);
+    if(fd < 0){
+        fprintf(stderr,"Error opening file");
+        exit(1);
+    }
+
+    dup2(fd, STDIN_FILENO);
+
+    close(fd); //to make sure the file gets closed after process
+
+    if(execvp(instruction[0],instruction) == -1){
+        fprintf(stderr, "execvp launch failed\n");
+        exit(1);
+    }
+
+}
+
+void child_with_output_redirected(char *instruction[], char* file, char operation){
+    int fd;
+    
+    if(operation == 'o'){
+        fd = open(file, O_WRONLY | O_CREAT);
+    }
+    else if(operation == 'a'){
+        fd = open(file, O_WRONLY | O_CREAT | O_APPEND);
+    }
+    if(fd < 0){
+        fprintf(stderr,"Error opening file");
+        exit(1);
+    }
+
+    dup2(fd, STDOUT_FILENO);
+
+    close(fd); //to make sure the file gets closed after process
+
+    if(execvp(instruction[0],instruction) == -1){
+        fprintf(stderr, "execvp launch failed\n");
+        exit(1);
+    }
+
+}
+
+void redirect_parse(char *args[], int argsc, char* direction, char* operation){
+    char *redirect = args[argsc-2];
+    if(redirect[0] == '<'){
+        *direction = 'r'; // 'r' for read from file
+    }
+    else{
+        *direction = 'w'; // 'w' for write to file
+    }
+    
+    if(redirect[1] == '\0'){
+        *operation = 'o'; //'o' for overwrite
+    }
+    else{
+        *operation = 'a'; //'a' for append
+    }
+}
+
+
+
 int command_with_redirection(char line[]){
     for(int i = 0; line[i] != '\0'; i++){
         char c = line[i];
