@@ -16,6 +16,9 @@
 #define MAX_ARGS 128
 #define MAX_PROMPT_LEN 256
 
+#define STDIN_FILENO 0
+#define STDOUT_FILENO 1
+
 ///Enum for readable argument indices (use where required)
 enum ArgIndex
 {
@@ -38,10 +41,16 @@ static inline void reap()
 void read_command_line(char line[]);
 void construct_shell_prompt(char shell_prompt[]);
 void parse_command(char line[], char *args[], int *argsc);
+int command_with_redirection(char line[]);
 
 ///Child functions (add more as appropriate)
 void child(char *args[], int argsc);
+void child_with_input_redirected(char *instruction[], char* file, char operation);
+void child_with_output_redirected(char *instruction[], char* file, char operation);
 
 ///Program launching functions (add more as appropriate)
 void launch_program(char *args[], int argsc);
+void launch_program_with_redirection(char *args[], int argsc);
+
+void redirect_parse(char *args[], int argsc, char* direction, char* operation);
 #endif
