@@ -128,7 +128,7 @@ void launch_program_with_redirection(char *args[], int argsc){
 }
 
 void child_with_input_redirected(char *instruction[], char* file, char operation){
-    int fd = open(file, O_RDONLY);
+    int fd = open(file, O_RDONLY, 0666);
     if(fd < 0){
         fprintf(stderr,"Error opening file");
         exit(1);
@@ -149,10 +149,10 @@ void child_with_output_redirected(char *instruction[], char* file, char operatio
     int fd;
     
     if(operation == 'o'){
-        fd = open(file, O_WRONLY | O_CREAT);
+        fd = open(file, O_WRONLY | O_CREAT, 0666);
     }
     else if(operation == 'a'){
-        fd = open(file, O_WRONLY | O_CREAT | O_APPEND);
+        fd = open(file, O_WRONLY | O_CREAT | O_APPEND, 0666);
     }
     if(fd < 0){
         fprintf(stderr,"Error opening file");
