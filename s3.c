@@ -230,7 +230,7 @@ int is_cd(char line[]){
 
 int run_cd(char *args[], int argsc, char lwd[]){
     // work out what type of cd command this is 
-    char cwd[PATH_MAX];
+    char cwd[MAX_PATH];
 
     const char *target = NULL;
 
@@ -239,7 +239,7 @@ int run_cd(char *args[], int argsc, char lwd[]){
         return -1;
     }
 
-    if (args[1] == NULL || args[1] = '\0'){
+    if (args[1] == NULL || args[1] == '\0'){
             target = getenv("HOME");
         }
     else if (args[1][0] == '~'){
@@ -268,13 +268,13 @@ int run_cd(char *args[], int argsc, char lwd[]){
         return -1;
     }
 
-    strncpy(lwd, cwd, PATH_MAX -1);
+    strncpy(lwd, cwd, MAX_PATH -1);
     lwd[sizeof(lwd) - 1] = '\0';
     return 0;
 }
 
 void init_lwd(char lwd[]){
-    char cwd[PATH_MAX];
+    char cwd[MAX_PATH];
 
     if (getcwd(cwd, sizeof(cwd)) == NULL) {
         lwd[0] = '\0';
@@ -282,6 +282,6 @@ void init_lwd(char lwd[]){
     }
     
     
-    strncpy(lwd, cwd, PATH_MAX - 1);
-    lwd[lwd_size - 1] = '\0';
+    strncpy(lwd, cwd, MAX_PATH - 1);
+    lwd[sizeof(lwd) - 1] = '\0';
 }
