@@ -44,7 +44,7 @@ void parse_command(char line[], char *args[], int *argsc);
 int command_with_redirection(char line[]);
 int is_cd(char line[]);
 void init_lwd(char lwd[]);
-void run_cd(char *args[], int argsc, char lwd[]);
+int run_cd(char *args[], int argsc, char lwd[]);
 ///Child functions (add more as appropriate)
 void child(char *args[], int argsc);
 void child_with_input_redirected(char *instruction[], char* file, char operation);
