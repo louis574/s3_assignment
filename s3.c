@@ -270,7 +270,7 @@ int run_cd(char *args[], int argsc, char lwd[]){
     }
 
     strncpy(lwd, cwd, MAX_PATH -1);
-    lwd[sizeof(lwd) - 1] = '\0';
+    lwd[MAX_PROMPT_LEN -1] = '\0';
     return 0;
 }
 
@@ -284,5 +284,5 @@ void init_lwd(char lwd[]){
     
     
     strncpy(lwd, cwd, MAX_PATH - 1);
-    lwd[sizeof(lwd) - 1] = '\0';
+    lwd[MAX_PROMPT_LEN - 1] = '\0';
 }

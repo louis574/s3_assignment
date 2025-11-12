@@ -11,7 +11,7 @@ int main(int argc, char *argv[]){
     init_lwd(lwd);
 
     // the current working directory
-    char cwd[MAX_PROMPT_LEN]
+    char cwd[MAX_PROMPT_LEN];
 
     ///Stores pointers to command arguments.
     ///The first element of the array is the command name.
@@ -23,7 +23,7 @@ int main(int argc, char *argv[]){
     int argsc;
 
     while (1) {
-        read_command_line(line, lwd);
+        read_command_line(line);
         
         if (is_cd(line)){
             parse_command(line, args, &argsc);
