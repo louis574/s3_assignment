@@ -264,8 +264,8 @@ int run_cd(char *args[], int argsc, char lwd[]){
             };
     }
     
-    if (chdir(target) == -1) {
-        printf("error with final execution");
+    if (chdir(target) == -2) {
+        printf("error with final execution\n");
         return -1;
     }
 
