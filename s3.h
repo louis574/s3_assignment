@@ -15,6 +15,7 @@
 #define MAX_LINE 1024
 #define MAX_ARGS 128
 #define MAX_PROMPT_LEN 256
+#define MAX_PIPE_LEN 50
 
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
@@ -57,4 +58,9 @@ void generic_tokeniser(char line[], char parse_char, char* args[], int* argsc);
 char* whitespace_trim(char* start);
 void my_parse_cmd(char line[], char *args[], int *argsc);
 char* quote_remover(char* string);
+int command_with_pipe(char line[]);
+void launch_cmd(char line[],char* args[], int* argsc, int child);
+void launch_pipe(char line[], char* args[], int* argsc);
+void execute_program(char* args[], int argsc);
+void execute_redirection(char *args[], int argsc);
 #endif

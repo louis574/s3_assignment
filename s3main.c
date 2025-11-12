@@ -13,24 +13,18 @@ int main(int argc, char *argv[]){
     int argsc;
 
     while (1) {
+
         read_command_line(line);
 
-        if(command_with_redirection(line)){
-            my_parse_cmd(line, args, &argsc);
 
-            launch_program_with_redirection(args, argsc);
-            
-            reap();            
+        if(command_with_pipe(line)){
+            launch_pipe(line,args,&argsc);
         }
 
         else{
-
-            my_parse_cmd(line, args, &argsc);
-
-            launch_program(args, argsc); 
-
-            reap();
+            launch_cmd(line,args,&argsc,1);
         }
+        
     }
 
     return 0;
