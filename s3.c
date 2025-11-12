@@ -149,7 +149,7 @@ void child_with_output_redirected(char *instruction[], char* file, char operatio
     int fd;
     
     if(operation == 'o'){
-        fd = open(file, O_WRONLY | O_CREAT, 0666);
+        fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
     }
     else if(operation == 'a'){
         fd = open(file, O_WRONLY | O_CREAT | O_APPEND, 0666);
