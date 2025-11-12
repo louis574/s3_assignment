@@ -16,7 +16,7 @@ int main(int argc, char *argv[]){
         read_command_line(line);
 
         if(command_with_redirection(line)){
-            parse_command(line, args, &argsc);
+            my_parse_cmd(line, args, &argsc);
 
             launch_program_with_redirection(args, argsc);
             
@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
 
         else{
 
-            parse_command(line, args, &argsc);
+            my_parse_cmd(line, args, &argsc);
 
             launch_program(args, argsc); 
 

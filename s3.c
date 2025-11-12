@@ -42,6 +42,14 @@ void parse_command(char line[], char *args[], int *argsc)
     args[*argsc] = NULL; ///args must be null terminated
 }
 
+void my_parse_cmd(char line[], char *args[], int *argsc){
+    char space = ' ';
+    generic_tokeniser(line,space,args,argsc);
+    for(int i = 0; i < *argsc;i++){
+        args[i] = quote_remover(args[i]);
+    }
+}
+
 ///Launch related functions
 void child(char* args[], int argsc)
 {
@@ -190,9 +198,17 @@ void redirect_parse(char *args[], int argsc, char* direction, char* operation){
 
 
 int command_with_redirection(char line[]){
+    int in_speech = 0;
+    
     for(int i = 0; line[i] != '\0'; i++){
+        
         char c = line[i];
-        if( c=='>' | c=='<'){
+        
+        if(c == '"'){
+            in_speech = !in_speech;
+        }
+
+        if(( c=='>' | c=='<') && !in_speech){
             return 1;
         }
     }
@@ -210,7 +226,7 @@ void generic_tokeniser(char line[], char parse_char, char* args[], int* argsc){
 
     while(line[i] != '\0' && *argsc < MAX_ARGS-1){
 
-        if(string_start){
+        if(string_start && line[i] != parse_char){
             args[*argsc] = &line[i];
             string_start = 0;
             (*argsc)++;
@@ -263,4 +279,14 @@ char* whitespace_trim(char* start){
 
 
     return &start[i];
+}
+
+
+char* quote_remover(char* string){
+    if(string[0] == '"'){
+        int len = strlen(string);
+        string[len-1] = '\0';
+        return &string[1];
+    }
+    return string;
 }

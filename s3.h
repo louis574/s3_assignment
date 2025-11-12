@@ -55,4 +55,6 @@ void launch_program_with_redirection(char *args[], int argsc);
 void redirect_parse(char *args[], int argsc, char* direction, char* operation);
 void generic_tokeniser(char line[], char parse_char, char* args[], int* argsc);
 char* whitespace_trim(char* start);
+void my_parse_cmd(char line[], char *args[], int *argsc);
+char* quote_remover(char* string);
 #endif

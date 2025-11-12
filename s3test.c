@@ -12,12 +12,10 @@ int main(int argc, char *argv[]){
     ///Stores the number of arguments
     int argsc;
 
-    char parse_char = '|';
-
     while (1) {
         read_command_line(line);
 
-        generic_tokeniser(line, parse_char, args, &argsc);
+        my_parse_cmd(line, args, &argsc);
 
         int i = 0;
         while(args[i] != NULL){
