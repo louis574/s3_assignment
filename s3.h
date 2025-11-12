@@ -42,7 +42,7 @@ void read_command_line(char line[]);
 void construct_shell_prompt(char shell_prompt[]);
 void parse_command(char line[], char *args[], int *argsc);
 int command_with_redirection(char line[]);
-int is_cd(char line[])
+int is_cd(char line[]);
 
 ///Child functions (add more as appropriate)
 void child(char *args[], int argsc);

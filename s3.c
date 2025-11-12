@@ -239,7 +239,7 @@ int run_cd(char *args[], int argsc, char lwd[]){
         return -1;
     }
 
-    if (args[1] == NULL || args[1] == '\0'){
+    if (args[1] == NULL){
             target = getenv("HOME");
         }
     else if (args[1][0] == '~'){
@@ -247,7 +247,8 @@ int run_cd(char *args[], int argsc, char lwd[]){
             target = getenv("HOME");
         }
         else {
-            printf("move function in two parts");
+            chdir(getenv("HOME"));
+                        
         }
     }
     else if (strcmp(args[1],"-") == 0) {
@@ -258,7 +259,7 @@ int run_cd(char *args[], int argsc, char lwd[]){
         target = lwd;
         }
     else {
-            if (!chdir(args[1])){
+            if (chdir(args[1])){
                 printf("Path not recognized");
             };
     }
