@@ -23,24 +23,7 @@ void read_command_line(char line[])
     line[strlen(line) - 1] = '\0';
 }
 
-void parse_command(char line[], char *args[], int *argsc)
-{
-    ///Implements simple tokenization (space delimited)
-    ///Note: strtok puts '\0' (null) characters within the existing storage, 
-    ///to split it into logical cstrings.
-    ///There is no dynamic allocation.
 
-    ///See the man page of strtok(...)
-    char *token = strtok(line, " ");
-    *argsc = 0;
-    while (token != NULL && *argsc < MAX_ARGS - 1)
-    {
-        args[(*argsc)++] = token;
-        token = strtok(NULL, " ");
-    }
-    
-    args[*argsc] = NULL; ///args must be null terminated
-}
 
 void my_parse_cmd(char line[], char *args[], int *argsc){
     char space = ' ';
@@ -94,6 +77,26 @@ void launch_program(char* args[], int argsc)
     ///exits.
 
 } 
+
+
+//////////////////////////////////////////////////////////////////
+/////////////////////// Pipes ////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////
+/////////////////// Redirects /////////////////////////////////
+///////////////////////////////////////////////////////////////
+
 
 
 
@@ -217,6 +220,10 @@ int command_with_redirection(char line[]){
 
 
 
+///////////////////////////////////////////////////////////////////////
+////////// Utility Functions - tokenising/parsing /////////////////////
+///////////////////////////////////////////////////////////////////////
+
 void generic_tokeniser(char line[], char parse_char, char* args[], int* argsc){
     int in_speech = 0;
     int string_start = 1;
@@ -290,3 +297,31 @@ char* quote_remover(char* string){
     }
     return string;
 }
+
+
+
+
+
+
+
+/*   Old parse command
+
+void parse_command(char line[], char *args[], int *argsc)
+{
+    ///Implements simple tokenization (space delimited)
+    ///Note: strtok puts '\0' (null) characters within the existing storage, 
+    ///to split it into logical cstrings.
+    ///There is no dynamic allocation.
+
+    ///See the man page of strtok(...)
+    char *token = strtok(line, " ");
+    *argsc = 0;
+    while (token != NULL && *argsc < MAX_ARGS - 1)
+    {
+        args[(*argsc)++] = token;
+        token = strtok(NULL, " ");
+    }
+    
+    args[*argsc] = NULL; ///args must be null terminated
+}
+*/
