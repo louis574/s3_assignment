@@ -198,3 +198,69 @@ int command_with_redirection(char line[]){
     }
     return 0;
 }
+
+
+
+void generic_tokeniser(char line[], char parse_char, char* args[], int* argsc){
+    int in_speech = 0;
+    int string_start = 1;
+    int i = 0;
+    *argsc = 0;
+
+
+    while(line[i] != '\0' && *argsc < MAX_ARGS-1){
+
+        if(string_start){
+            args[*argsc] = &line[i];
+            string_start = 0;
+            (*argsc)++;
+        }
+
+
+
+        if(line[i] == '"'){
+            in_speech = !in_speech;
+        }
+
+        else if(!in_speech && line[i] == parse_char){
+            line[i] = '\0';
+            string_start = 1;
+        }
+
+    
+        
+        
+        
+        i++;
+    
+    }
+    args[*argsc] = NULL;
+
+
+    for(int x = 0; x<*argsc; x++){
+        args[x] = whitespace_trim(args[x]);
+
+
+    }
+
+}
+
+
+char* whitespace_trim(char* start){
+    int i = 0;
+    int j = strlen(start) - 1;
+
+
+    while(start[i] == ' '){
+        i++;
+    }
+
+    while(start[j] == ' ' && j >= i){
+        start[j] = '\0';
+        j--;
+    }
+
+
+
+    return &start[i];
+}
