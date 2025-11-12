@@ -15,7 +15,7 @@
 #define MAX_LINE 1024
 #define MAX_ARGS 128
 #define MAX_PROMPT_LEN 256
-
+#define MAX_PATH 260
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
 
@@ -42,6 +42,7 @@ void read_command_line(char line[]);
 void construct_shell_prompt(char shell_prompt[]);
 void parse_command(char line[], char *args[], int *argsc);
 int command_with_redirection(char line[]);
+int is_cd(char line[])
 
 ///Child functions (add more as appropriate)
 void child(char *args[], int argsc);
