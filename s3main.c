@@ -28,7 +28,7 @@ int main(int argc, char *argv[]){
         if (is_cd(line)){
             parse_command(line, args, &argsc);
             if (run_cd(args, argsc, lwd)  == -1){
-                Printf("error in compiling cd function");
+                printf("error in compiling cd function");
 
             };
         }
