@@ -21,6 +21,10 @@ int main(int argc, char *argv[]){
 
         read_command_line(line);
 
+        if(strcmp(line,"exit") == 0){
+            exit(0);
+        }
+
         if (is_cd(line)){
             my_parse_cmd(line, args, &argsc);
             if (run_cd(args, argsc, lwd)  == -1){

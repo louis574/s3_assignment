@@ -1,9 +1,15 @@
 #include "s3.h"
 
-///Simple for now, but will be expanded in a following section
 void construct_shell_prompt(char shell_prompt[])
 {
-    strcpy(shell_prompt, "[s3]$ ");
+    // get the current working directory
+
+    char cwd[MAX_PATH];
+    if (getcwd(cwd, sizeof(cwd)) == NULL){
+        printf("Max prompt length exceded");
+        return;
+    };
+    snprintf(shell_prompt, MAX_PROMPT_LEN, "[s3:%s]$ ", cwd);
 }
 
 ///Prints a shell prompt and reads input from the user

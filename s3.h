@@ -14,9 +14,9 @@
 ///Constants for array sizes, defined for clarity and code readability
 #define MAX_LINE 1024
 #define MAX_ARGS 128
-#define MAX_PROMPT_LEN 256
+#define MAX_PROMPT_LEN 512
 #define MAX_PIPE_LEN 50
-#define MAX_PATH 260
+#define MAX_PATH 256
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
 
