@@ -121,6 +121,96 @@ void launch_cmd(char line[],char* args[], int* argsc, int child){
     }
 }
 
+///////////////////////////////////////////////////////////////////
+/////////////////////////// cd ////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+// requirements 
+// distinguish between the arguments of cd 
+// no argument -> users home 
+// - -> change to previous directory , will require a last directory variable
+//use getcwd to print the current directory the user is in
+// maintain the current directory in construct shell prompt
+
+int is_cd(char line[]){
+    if (line[0] == 'c' && line[1] == 'd'){
+        return 1;
+    }
+    return 0;
+}
+
+// different cases 
+// cd with no args or with ~ - $home
+// cd - assign pwd to cwd
+// cd <path> - go to that path 
+
+int run_cd(char *args[], int argsc, char lwd[]){
+    // work out what type of cd command this is 
+    char cwd[MAX_PATH];
+
+    char *target = NULL;
+
+    if (!getcwd(cwd, sizeof(cwd))) {
+        perror("getcwd");
+        return -1;
+    }
+
+    if (args[1] == NULL){
+            target = getenv("HOME");
+        }
+    else if (args[1][0] == '~'){
+        if (args[1][1] == '\0'){
+            target = getenv("HOME");
+        }
+        else if(args[1][1] == '/'){
+            chdir(getenv("HOME"));
+            char *new_path_pointer = &args[1][2]; 
+            
+
+
+            chdir(new_path_pointer);
+                        
+        }
+    }
+    else if (strcmp(args[1],"-") == 0) {
+        if (lwd[0] == '\0'){
+            printf("no previous directory");
+            return -1;
+        }    
+        target = lwd;
+        }
+    else {
+            if (chdir(args[1])){
+                printf("No such file or directory\n");
+            };
+    }
+    
+    if (chdir(target) == -2) {
+        printf("error with final execution\n");
+        return -1;
+    }
+
+    strncpy(lwd, cwd, MAX_PATH -1);
+    lwd[MAX_PROMPT_LEN -1] = '\0';
+    return 0;
+}
+
+void init_lwd(char lwd[]){
+    char cwd[MAX_PATH];
+
+    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+        lwd[0] = '\0';
+        return;
+    }
+    
+    
+    strncpy(lwd, cwd, MAX_PATH - 1);
+    lwd[MAX_PROMPT_LEN - 1] = '\0';
+}
+
+
+
+
 
 //////////////////////////////////////////////////////////////////
 /////////////////////// Pipes ////////////////////////////////////
