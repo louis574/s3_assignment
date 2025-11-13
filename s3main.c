@@ -12,12 +12,17 @@ int main(int argc, char *argv[]){
     ///Stores the number of arguments
     int argsc;
 
+    ///The last (previous) working directory 
+    char lwd[MAX_PROMPT_LEN]; 
+
+    init_lwd(lwd);
+
     while (1) {
 
         read_command_line(line);
 
         if (is_cd(line)){
-            my_parse_command(line, args, &argsc);
+            my_parse_cmd(line, args, &argsc);
             if (run_cd(args, argsc, lwd)  == -1){
                 printf("error in compiling cd function");
 

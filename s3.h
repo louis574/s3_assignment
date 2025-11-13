@@ -53,6 +53,12 @@ void child_with_output_redirected(char *instruction[], char* file, char operatio
 void launch_program(char *args[], int argsc);
 void launch_program_with_redirection(char *args[], int argsc);
 
+///cd
+
+int is_cd(char line[]);
+int run_cd(char *args[], int argsc, char lwd[]);
+void init_lwd(char lwd[]);
+
 void redirect_parse(char *args[], int argsc, char* direction, char* operation);
 void generic_tokeniser(char line[], char parse_char, char* args[], int* argsc);
 char* whitespace_trim(char* start);
