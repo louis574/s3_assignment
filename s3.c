@@ -116,6 +116,13 @@ void launch_cmd(char line[],char* args[], int* argsc, int child){
 
         my_parse_cmd(line, args, argsc);
 
+        int i = 0;
+
+        while(args[i] != NULL){
+            i++;
+
+        }
+
         if(child){
             launch_program(args, *argsc); 
         }
@@ -485,6 +492,80 @@ int command_with_redirection(char line[]){
 
 
 ///////////////////////////////////////////////////////////////////////
+///////////////////////// Batching ////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
+
+int command_with_batch(char line[]){
+    int in_speech = 0;
+    
+    for(int i = 0; line[i] != '\0'; i++){
+        
+        char c = line[i];
+        
+        if(c == '"'){
+            in_speech = !in_speech;
+        }
+
+        if( c==';' && !in_speech){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void launch_batch(char line[], char* args[], int* argsc, char* lwd){
+
+    char* instructions[MAX_BATCH_SIZE];
+    int instruction_argsc;
+
+    char batch_char = ';';
+
+    generic_tokeniser(line, batch_char, instructions, &instruction_argsc);
+
+    int i = 0;
+
+    while(instructions[i] != NULL){
+
+        if(strcmp(instructions[i],"exit") == 0){
+            exit(0);
+        }
+
+        if (is_cd(instructions[i])){
+            my_parse_cmd(instructions[i], args, argsc);
+            if (run_cd(args, *argsc, lwd)  == -1){
+                printf("error in compiling cd function");
+
+            };
+        }
+
+
+        else if(command_with_pipe(instructions[i])){
+            launch_pipe(instructions[i],args,argsc);
+        }
+
+        else{
+            launch_cmd(instructions[i],args,argsc,1);
+        }
+
+        i++;
+
+
+
+
+    }
+
+
+
+
+
+
+}
+
+
+
+
+///////////////////////////////////////////////////////////////////////
 ////////// Utility Functions - tokenising/parsing /////////////////////
 ///////////////////////////////////////////////////////////////////////
 
@@ -561,31 +642,3 @@ char* quote_remover(char* string){
     }
     return string;
 }
-
-
-
-
-
-
-
-/*   Old parse command
-
-void parse_command(char line[], char *args[], int *argsc)
-{
-    ///Implements simple tokenization (space delimited)
-    ///Note: strtok puts '\0' (null) characters within the existing storage, 
-    ///to split it into logical cstrings.
-    ///There is no dynamic allocation.
-
-    ///See the man page of strtok(...)
-    char *token = strtok(line, " ");
-    *argsc = 0;
-    while (token != NULL && *argsc < MAX_ARGS - 1)
-    {
-        args[(*argsc)++] = token;
-        token = strtok(NULL, " ");
-    }
-    
-    args[*argsc] = NULL; ///args must be null terminated
-}
-*/

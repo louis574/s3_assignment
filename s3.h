@@ -19,6 +19,7 @@
 #define MAX_PATH 256
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
+#define MAX_BATCH_SIZE 32
 
 ///Enum for readable argument indices (use where required)
 enum ArgIndex
@@ -69,4 +70,6 @@ void launch_cmd(char line[],char* args[], int* argsc, int child);
 void launch_pipe(char line[], char* args[], int* argsc);
 void execute_program(char* args[], int argsc);
 void execute_redirection(char *args[], int argsc);
+int command_with_batch(char line[]);
+void launch_batch(char line[], char* args[], int* argsc, char* lwd);
 #endif
