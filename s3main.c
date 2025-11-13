@@ -16,8 +16,16 @@ int main(int argc, char *argv[]){
 
         read_command_line(line);
 
+        if (is_cd(line)){
+            my_parse_command(line, args, &argsc);
+            if (run_cd(args, argsc, lwd)  == -1){
+                printf("error in compiling cd function");
 
-        if(command_with_pipe(line)){
+            };
+        }
+
+
+        else if(command_with_pipe(line)){
             launch_pipe(line,args,&argsc);
         }
 
