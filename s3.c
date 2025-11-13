@@ -10,7 +10,7 @@ void construct_shell_prompt(char shell_prompt[])
         printf("Max prompt length exceded");
         return;
     };
-    snprintf(shell_prompt, MAX_PROMPT_LEN, "[S3:%s]$", cwd);
+    snprintf(shell_prompt, MAX_PROMPT_LEN, "[s3:%s]$ ", cwd);
 }
 
 ///Prints a shell prompt and reads input from the user
@@ -232,7 +232,7 @@ int run_cd(char *args[], int argsc, char lwd[]){
     // work out what type of cd command this is 
     char cwd[MAX_PATH];
 
-    const char *target = NULL;
+    char *target = NULL;
 
     if (!getcwd(cwd, sizeof(cwd))) {
         perror("getcwd");
@@ -246,8 +246,13 @@ int run_cd(char *args[], int argsc, char lwd[]){
         if (args[1][1] == '\0'){
             target = getenv("HOME");
         }
-        else {
+        else if(args[1][1] == '/'){
             chdir(getenv("HOME"));
+            char *new_path_pointer = &args[1][2]; 
+            
+
+
+            chdir(new_path_pointer);
                         
         }
     }
@@ -260,7 +265,7 @@ int run_cd(char *args[], int argsc, char lwd[]){
         }
     else {
             if (chdir(args[1])){
-                printf("Path not recognized");
+                printf("No such file or directory\n");
             };
     }
     
