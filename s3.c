@@ -527,32 +527,14 @@ void launch_batch(char line[], char* args[], int* argsc, char* lwd){
 
     while(instructions[i] != NULL){
 
-        if(strcmp(instructions[i],"exit") == 0){
-            exit(0);
-        }
+        printf("%d in sub shell handler \n", i);
+        sub_shell_handler(instructions[i], *args, argsc, lwd);
 
-        if (is_cd(instructions[i])){
-            my_parse_cmd(instructions[i], args, argsc);
-            if (run_cd(args, *argsc, lwd)  == -1){
-                printf("error in compiling cd function");
-
-            };
-        }
-
-
-        else if(command_with_pipe(instructions[i])){
-            launch_pipe(instructions[i],args,argsc);
-        }
-
-        else{
-            launch_cmd(instructions[i],args,argsc,1);
-        }
-
-        i++;
 
 
 
 
+        i++;
     }
 
 
@@ -562,12 +544,138 @@ void launch_batch(char line[], char* args[], int* argsc, char* lwd){
 
 }
 
+////////////////////////////////////////////////////////////////////////
+//////////////////////////////// subsheel //////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
+
+
+
+
+int sub_shell_detect(char line[]){
+    if(line[0] == '(' && line[strlen(line)-1] == ')'){        
+        return 1;
+    }
+    else{
+        return 0;
+    }
+}
+
+char* sub_shell_trim(char line[]){
+    line[strlen(line)-1] = '\0';
+    return whitespace_trim(&line[1]);
+}
+
+
+
+
+char*  sub_shell_split(char line[]){
+    
+    if(line[0] == 'c' && line[1] == 'd' && line[2] == ' '){
+        int i = 3;
+        while(line[i] != ' '){
+            i++;
+        }
+        line[i] = '\0';
+        return &line[i+1];
+    }
+    else{
+        printf("incorrect input format\n");
+        exit(1);
+    }
+}
+
+void sub_shell_child(char line[],char* args, int argsc){
+    line = sub_shell_trim(line);
+    char* cd = &line[0];
+    char* ins = sub_shell_split(line);
+    char cwd[MAX_PATH];
+    char tmp_cwd[MAX_PATH];
+    printf("this is the cd %s\n",cd);
+    printf("this is the ins %s\n", ins);
+    getcwd(cwd, sizeof(cwd));
+    getcwd(tmp_cwd, sizeof(tmp_cwd));
+    my_parse_cmd(cd, &args, &argsc);
+    if (run_cd(&args, argsc, cwd)  == -1){
+        printf("error in compiling cd function");
+    }
+
+    sub_shell_handler(ins,args, &argsc, cwd);
+
+    if (run_cd(&args, argsc, cwd)  == -1){
+        printf("error in compiling cd function");
+    }
+
+    chdir(tmp_cwd);
+
+
+
+
+
+}
+
+
+void sub_shell_handler(char line[], char* args, int* argsc, char* lwd){
+
+
+    if(sub_shell_detect(line)){
+        printf("sub-shell setected\n");
+        int rc = fork();
+        if (rc < 0){
+            fprintf(stderr, "fork failed\n");
+            exit(1);
+        }
+        else if (rc == 0){ //child
+            sub_shell_child(line, args, *argsc);
+        }
+        else{ //parent
+            wait(NULL);
+        }
+        
+        }
+    else{
+        if(command_with_batch(line)){
+            launch_batch(line,&args, argsc, lwd);
+
+        }
+
+        else{
+            
+
+            if(strcmp(line,"exit") == 0){
+                exit(0);
+            }
+
+
+
+            if (is_cd(line)){
+                my_parse_cmd(line, &args, argsc);
+                if (run_cd(&args, *argsc, lwd)  == -1){
+                    printf("error in compiling cd function");
+
+                };
+            }
+
+
+            else if(command_with_pipe(line)){
+                launch_pipe(line,&args,argsc);
+            }
+
+            else{
+                launch_cmd(line,&args,argsc,1);
+            }
+
+        }
+    }
+    
+}
 
 
 ///////////////////////////////////////////////////////////////////////
 ////////// Utility Functions - tokenising/parsing /////////////////////
 ///////////////////////////////////////////////////////////////////////
+
+
 
 void generic_tokeniser(char line[], char parse_char, char* args[], int* argsc){
     int in_speech = 0;

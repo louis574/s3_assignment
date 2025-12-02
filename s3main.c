@@ -23,33 +23,14 @@ int main(int argc, char *argv[]){
 
 
         if(command_with_batch(line)){
+            printf("batched commands detected\n");
             launch_batch(line,args, &argsc, lwd);
 
         }
 
         else{
         
-
-            if(strcmp(line,"exit") == 0){
-                exit(0);
-            }
-
-            if (is_cd(line)){
-                my_parse_cmd(line, args, &argsc);
-                if (run_cd(args, argsc, lwd)  == -1){
-                    printf("error in compiling cd function");
-
-                };
-            }
-
-
-            else if(command_with_pipe(line)){
-                launch_pipe(line,args,&argsc);
-            }
-
-            else{
-                launch_cmd(line,args,&argsc,1);
-            }
+            sub_shell_handler(line,*args, &argsc, lwd);
         }
         
     }
