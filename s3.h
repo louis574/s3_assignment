@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <glob.h>
 
 ///Constants for array sizes, defined for clarity and code readability
 #define MAX_LINE 1024
@@ -93,6 +94,10 @@ void sub_shell_aware_batch_tokeniser(char line[], char* args[], int* argsc);
 
 
 
+int glob_in_operand(char *in);
+
+
+void expand_glob_in_params(char *args[], int *argsc);
 
 
 #endif

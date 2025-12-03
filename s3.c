@@ -46,7 +46,11 @@ void my_parse_cmd(char line[], char *args[], int *argsc){
 void child(char* args[], int argsc)
 {
     ///Implement this function:
-
+    expand_glob_in_params(args,&argsc);
+    int i = 0;
+    while(args[i] != NULL){
+        i++;
+    }
     if(execvp(args[0],args) == -1){
         fprintf(stderr, "execvp launch failed\n");
         exit(1);
@@ -420,6 +424,15 @@ void child_with_input_redirected(char *instruction[], char* file, char operation
 
     close(fd); //to make sure the file gets closed after process
 
+    int argsc = 0;
+
+    while(instruction[argsc]!=NULL){
+        argsc++;
+    }
+
+
+
+    expand_glob_in_params(instruction,&argsc);
     if(execvp(instruction[0],instruction) == -1){
         fprintf(stderr, "execvp launch failed\n");
         exit(1);
@@ -445,6 +458,13 @@ void child_with_output_redirected(char *instruction[], char* file, char operatio
 
     close(fd); //to make sure the file gets closed after process
 
+    int argsc = 0;
+
+    while(instruction[argsc]!=NULL){
+        argsc++;
+    }
+
+    expand_glob_in_params(instruction,&argsc);
     if(execvp(instruction[0],instruction) == -1){
         fprintf(stderr, "execvp launch failed\n");
         exit(1);
@@ -535,13 +555,11 @@ void launch_batch(char line[], char* args[], int* argsc, char* lwd){
 
     while(instructions[i] != NULL){
 
-        printf("%d in sub shell handler: %s \n", i, instructions[i]);
         sub_shell_handler(instructions[i], args, argsc, lwd);
 
 
 
 
-        printf("%d succesfull\n",i);
         i++;
     }
 
@@ -599,8 +617,6 @@ void sub_shell_child(char line[],char** args, int argsc, char* lwd){
     char* ins = sub_shell_split(line);
     //char cwd[MAX_PATH];
     char tmp_cwd[MAX_PATH];
-    printf("this is the cd %s\n",cd);
-    printf("this is the ins %s\n", ins);
     //getcwd(cwd, sizeof(cwd));
     getcwd(tmp_cwd, sizeof(tmp_cwd));
     my_parse_cmd(cd, args, &argsc);
@@ -608,7 +624,6 @@ void sub_shell_child(char line[],char** args, int argsc, char* lwd){
         printf("error in compiling cd function");
     }
 
-    printf("instruction going into sub shekk handler from sub shell child: %s\n",ins);
 
     sub_shell_handler(ins,args, &argsc, lwd);
 
@@ -625,7 +640,6 @@ void sub_shell_handler(char line[], char** args, int* argsc, char* lwd){
 
 
     if(sub_shell_detect(line)){
-        printf("sub-shell setected\n");
             sub_shell_child(line, args, *argsc, lwd);
         
         }
@@ -798,4 +812,59 @@ char* quote_remover(char* string){
         return &string[1];
     }
     return string;
+}
+
+
+
+////////////////////////////////////////////////////
+////////////////////// globbing ///////////////////
+//////////////////////////////////////////////////
+
+int glob_in_operand(char *in){
+    int i = 0;
+    while(in[i] != '\0'){
+        if(in[i] == '*'){
+            return 1;
+        }
+        i++;
+    }
+    return 0;
+}
+
+
+void expand_glob_in_params(char *args[], int *argsc) {
+    char *expanded[MAX_ARGS];
+    int newc = 0;
+
+    for (int i = 0; i < *argsc; i++) {
+        char *operand = args[i];
+
+        if (glob_in_operand(operand)) {
+            glob_t unpacked;
+
+            int ret = glob(operand, 0, NULL, &unpacked);
+
+            if (ret == 0) {
+
+                for (size_t j = 0; j < unpacked.gl_pathc; j++) {
+                    expanded[newc++] = strdup(unpacked.gl_pathv[j]);
+                }
+            } else {
+
+                expanded[newc++] = operand;
+            }
+
+            globfree(&unpacked);
+        }
+        else {
+            expanded[newc++] = operand;
+        }
+    }
+
+    // Copy back
+    for (int i = 0; i < newc; i++)
+        args[i] = expanded[i];
+
+    args[newc] = NULL;
+    *argsc = newc;
 }

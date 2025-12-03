@@ -23,7 +23,6 @@ int main(int argc, char *argv[]){
 
 
         if(command_with_batch(line)){
-            printf("batched commands detected\n");
             launch_batch(line,args, &argsc, lwd);
 
         }
