@@ -30,7 +30,7 @@ int main(int argc, char *argv[]){
 
         else{
         
-            sub_shell_handler(line,*args, &argsc, lwd);
+            sub_shell_handler(line,args, &argsc, lwd);
         }
         
     }

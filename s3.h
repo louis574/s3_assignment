@@ -84,10 +84,12 @@ char* sub_shell_trim(char line[]);
 
 char*  sub_shell_split(char line[]);
 
-void sub_shell_child(char line[],char* args, int argsc);
+void sub_shell_child(char line[],char** args, int argsc, char* lwd);
 
 
-void sub_shell_handler(char line[], char* args, int* argsc, char* lwd);
+void sub_shell_handler(char line[], char** args, int* argsc, char* lwd);
+
+void sub_shell_aware_batch_tokeniser(char line[], char* args[], int* argsc);
 
 
 

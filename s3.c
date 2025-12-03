@@ -498,6 +498,7 @@ int command_with_redirection(char line[]){
 
 int command_with_batch(char line[]){
     int in_speech = 0;
+    int in_sub_shell = 0;
     
     for(int i = 0; line[i] != '\0'; i++){
         
@@ -507,7 +508,15 @@ int command_with_batch(char line[]){
             in_speech = !in_speech;
         }
 
-        if( c==';' && !in_speech){
+        else if(c=='('){
+            in_sub_shell = 1;
+        }
+
+        else if(c==')'){
+            in_sub_shell = 0;
+        }
+
+        if( c==';' && !in_speech && !in_sub_shell){
             return 1;
         }
     }
@@ -515,25 +524,24 @@ int command_with_batch(char line[]){
 }
 
 void launch_batch(char line[], char* args[], int* argsc, char* lwd){
-
+    
     char* instructions[MAX_BATCH_SIZE];
     int instruction_argsc;
 
-    char batch_char = ';';
 
-    generic_tokeniser(line, batch_char, instructions, &instruction_argsc);
+    sub_shell_aware_batch_tokeniser(line, instructions, &instruction_argsc);
 
     int i = 0;
 
     while(instructions[i] != NULL){
 
-        printf("%d in sub shell handler \n", i);
-        sub_shell_handler(instructions[i], *args, argsc, lwd);
+        printf("%d in sub shell handler: %s \n", i, instructions[i]);
+        sub_shell_handler(instructions[i], args, argsc, lwd);
 
 
 
 
-
+        printf("%d succesfull\n",i);
         i++;
     }
 
@@ -585,26 +593,24 @@ char*  sub_shell_split(char line[]){
     }
 }
 
-void sub_shell_child(char line[],char* args, int argsc){
+void sub_shell_child(char line[],char** args, int argsc, char* lwd){
     line = sub_shell_trim(line);
     char* cd = &line[0];
     char* ins = sub_shell_split(line);
-    char cwd[MAX_PATH];
+    //char cwd[MAX_PATH];
     char tmp_cwd[MAX_PATH];
     printf("this is the cd %s\n",cd);
     printf("this is the ins %s\n", ins);
-    getcwd(cwd, sizeof(cwd));
+    //getcwd(cwd, sizeof(cwd));
     getcwd(tmp_cwd, sizeof(tmp_cwd));
-    my_parse_cmd(cd, &args, &argsc);
-    if (run_cd(&args, argsc, cwd)  == -1){
+    my_parse_cmd(cd, args, &argsc);
+    if (run_cd(args, argsc, lwd)  == -1){
         printf("error in compiling cd function");
     }
 
-    sub_shell_handler(ins,args, &argsc, cwd);
+    printf("instruction going into sub shekk handler from sub shell child: %s\n",ins);
 
-    if (run_cd(&args, argsc, cwd)  == -1){
-        printf("error in compiling cd function");
-    }
+    sub_shell_handler(ins,args, &argsc, lwd);
 
     chdir(tmp_cwd);
 
@@ -615,27 +621,17 @@ void sub_shell_child(char line[],char* args, int argsc){
 }
 
 
-void sub_shell_handler(char line[], char* args, int* argsc, char* lwd){
+void sub_shell_handler(char line[], char** args, int* argsc, char* lwd){
 
 
     if(sub_shell_detect(line)){
         printf("sub-shell setected\n");
-        int rc = fork();
-        if (rc < 0){
-            fprintf(stderr, "fork failed\n");
-            exit(1);
-        }
-        else if (rc == 0){ //child
-            sub_shell_child(line, args, *argsc);
-        }
-        else{ //parent
-            wait(NULL);
-        }
+            sub_shell_child(line, args, *argsc, lwd);
         
         }
     else{
         if(command_with_batch(line)){
-            launch_batch(line,&args, argsc, lwd);
+            launch_batch(line,args, argsc, lwd);
 
         }
 
@@ -649,8 +645,8 @@ void sub_shell_handler(char line[], char* args, int* argsc, char* lwd){
 
 
             if (is_cd(line)){
-                my_parse_cmd(line, &args, argsc);
-                if (run_cd(&args, *argsc, lwd)  == -1){
+                my_parse_cmd(line, args, argsc);
+                if (run_cd(args, *argsc, lwd)  == -1){
                     printf("error in compiling cd function");
 
                 };
@@ -658,11 +654,11 @@ void sub_shell_handler(char line[], char* args, int* argsc, char* lwd){
 
 
             else if(command_with_pipe(line)){
-                launch_pipe(line,&args,argsc);
+                launch_pipe(line,args,argsc);
             }
 
             else{
-                launch_cmd(line,&args,argsc,1);
+                launch_cmd(line,args,argsc,1);
             }
 
         }
@@ -699,6 +695,59 @@ void generic_tokeniser(char line[], char parse_char, char* args[], int* argsc){
         }
 
         else if(!in_speech && line[i] == parse_char){
+            line[i] = '\0';
+            string_start = 1;
+        }
+
+    
+        
+        
+        
+        i++;
+    
+    }
+    args[*argsc] = NULL;
+
+
+    for(int x = 0; x<*argsc; x++){
+        args[x] = whitespace_trim(args[x]);
+
+
+    }
+
+}
+
+void sub_shell_aware_batch_tokeniser(char line[], char* args[], int* argsc){
+    int in_speech = 0;
+    int in_sub_shell = 0;
+    int string_start = 1;
+    int i = 0;
+    *argsc = 0;
+
+    char parse_char = ';';
+
+
+    while(line[i] != '\0' && *argsc < MAX_ARGS-1){
+
+        if(string_start && line[i] != parse_char){
+            args[*argsc] = &line[i];
+            string_start = 0;
+            (*argsc)++;
+        }
+
+
+
+        if(line[i] == '"'){
+            in_speech = !in_speech;
+        }
+        else if(line[i] == '('){
+            in_sub_shell = 1;
+        }
+        else if(line[i] == ')'){
+            in_sub_shell = 0;
+        }
+
+        else if(!in_sub_shell && !in_speech && line[i] == parse_char){
             line[i] = '\0';
             string_start = 1;
         }
