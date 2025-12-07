@@ -37,9 +37,6 @@ void read_command_line(char line[])
 void my_parse_cmd(char line[], char *args[], int *argsc){
     char space = ' ';
     generic_tokeniser(line,space,args,argsc);
-    for(int i = 0; i < *argsc;i++){
-        args[i] = quote_remover(args[i]);
-    }
 }
 
 ///Launch related functions
@@ -47,6 +44,9 @@ void child(char* args[], int argsc)
 {
     ///Implement this function:
     expand_glob_in_params(args,&argsc);
+    for(int i = 0; i < argsc;i++){
+        args[i] = quote_remover(args[i]);
+    }
     int i = 0;
     while(args[i] != NULL){
         i++;
@@ -150,7 +150,7 @@ void launch_cmd(char line[],char* args[], int* argsc, int child){
 // maintain the current directory in construct shell prompt
 
 int is_cd(char line[]){
-    if (line[0] == 'c' && line[1] == 'd'){
+    if (line[0] == 'c' && line[1] == 'd' && line[2] == ' '){
         return 1;
     }
     return 0;
@@ -433,6 +433,9 @@ void child_with_input_redirected(char *instruction[], char* file, char operation
 
 
     expand_glob_in_params(instruction,&argsc);
+    for(int i = 0; i < argsc;i++){
+        instruction[i] = quote_remover(instruction[i]);
+    }
     if(execvp(instruction[0],instruction) == -1){
         fprintf(stderr, "execvp launch failed\n");
         exit(1);
@@ -464,7 +467,15 @@ void child_with_output_redirected(char *instruction[], char* file, char operatio
         argsc++;
     }
 
+
     expand_glob_in_params(instruction,&argsc);
+
+    for(int i = 0; i < argsc;i++){
+        instruction[i] = quote_remover(instruction[i]);
+    }
+
+
+
     if(execvp(instruction[0],instruction) == -1){
         fprintf(stderr, "execvp launch failed\n");
         exit(1);
@@ -544,6 +555,8 @@ int command_with_batch(char line[]){
 }
 
 void launch_batch(char line[], char* args[], int* argsc, char* lwd){
+
+    printf("launching this batcj: %s\n", line);
     
     char* instructions[MAX_BATCH_SIZE];
     int instruction_argsc;
@@ -554,6 +567,8 @@ void launch_batch(char line[], char* args[], int* argsc, char* lwd){
     int i = 0;
 
     while(instructions[i] != NULL){
+
+        printf("instruction going into sub shell handler from batched commands: %s\n", instructions[i]);
 
         sub_shell_handler(instructions[i], args, argsc, lwd);
 
@@ -579,6 +594,29 @@ void launch_batch(char line[], char* args[], int* argsc, char* lwd){
 
 
 int sub_shell_detect(char line[]){
+    line = whitespace_trim(&line[0]);
+
+    int in_shell = 0;
+
+    int i = 0;
+
+    while(line[i] != '\0'){
+        if(line[i] == '('){
+            in_shell++;
+        }
+        else if(line[i] == ')'){
+            in_shell--;
+        }
+        else if(line[i] ==';' && in_shell == 0){
+            return 0;
+        }
+
+
+        i++;
+    }
+
+
+
     if(line[0] == '(' && line[strlen(line)-1] == ')'){        
         return 1;
     }
@@ -588,6 +626,7 @@ int sub_shell_detect(char line[]){
 }
 
 char* sub_shell_trim(char line[]){
+    line = whitespace_trim(&line[0]);
     line[strlen(line)-1] = '\0';
     return whitespace_trim(&line[1]);
 }
@@ -596,23 +635,33 @@ char* sub_shell_trim(char line[]){
 
 
 char*  sub_shell_split(char line[]){
+
+    printf("splitting: %s\n", line);
     
-    if(line[0] == 'c' && line[1] == 'd' && line[2] == ' '){
+    if(line[0] == 'c' && line[1] == 'd' && line[2] == ' ' ){
         int i = 3;
-        while(line[i] != ' '){
+        while(line[i] != '\0' && line[i] != ';'){
             i++;
         }
-        line[i] = '\0';
-        return &line[i+1];
+        if(line[i] == '\0'){
+            printf("incorrect input format\n");
+        }
+        else{
+            line[i] = '\0';
+            return &line[i+1];
+        }
     }
     else{
         printf("incorrect input format\n");
+        printf("caused by: %s\n", line);
         exit(1);
     }
 }
 
 void sub_shell_child(char line[],char** args, int argsc, char* lwd){
+    printf("this is a subshell: %s\n", line);
     line = sub_shell_trim(line);
+    printf("this is the sub_shell clipped: %s\n", line);
     char* cd = &line[0];
     char* ins = sub_shell_split(line);
     //char cwd[MAX_PATH];
@@ -637,6 +686,7 @@ void sub_shell_child(char line[],char** args, int argsc, char* lwd){
 
 
 void sub_shell_handler(char line[], char** args, int* argsc, char* lwd){
+
 
 
     if(sub_shell_detect(line)){
@@ -822,8 +872,12 @@ char* quote_remover(char* string){
 
 int glob_in_operand(char *in){
     int i = 0;
+    int in_speech = 0;
     while(in[i] != '\0'){
-        if(in[i] == '*'){
+        if(in[i] == '"'){
+            i = !i;
+        }
+        else if(in[i] == '*' && !in_speech){
             return 1;
         }
         i++;

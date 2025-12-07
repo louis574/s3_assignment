@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
         read_command_line(line);
 
 
-        if(command_with_batch(line)){
+        if(command_with_batch(line) && !sub_shell_detect(line)){
             launch_batch(line,args, &argsc, lwd);
 
         }
