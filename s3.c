@@ -662,9 +662,8 @@ char*  sub_shell_split(char line[]){
 }
 
 void sub_shell_child(char line[],char** args, int argsc, char* lwd){
-    printf("this is a subshell: %s\n", line);
+    printf("forked subshell child\n");
     line = sub_shell_trim(line);
-    printf("this is the sub_shell clipped: %s\n", line);
     char* cd = &line[0];
     char* ins = sub_shell_split(line);
     //char cwd[MAX_PATH];
@@ -674,12 +673,15 @@ void sub_shell_child(char line[],char** args, int argsc, char* lwd){
     my_parse_cmd(cd, args, &argsc);
     if (run_cd(args, argsc, lwd)  == -1){
         printf("error in compiling cd function");
+        exit(1);
     }
 
 
     sub_shell_handler(ins,args, &argsc, lwd);
 
-    chdir(tmp_cwd);
+    //chdir(tmp_cwd);
+
+    exit(0);
 
 
 
@@ -693,10 +695,23 @@ void sub_shell_handler(char line[], char** args, int* argsc, char* lwd){
 
 
     if(sub_shell_detect(line)){
+        printf("sub-shell detected\n");
+        int rc = fork();
+        if (rc < 0){
+            fprintf(stderr, "fork failed\n");
+            exit(1);
+        }
+        else if (rc == 0){ //child
             sub_shell_child(line, args, *argsc, lwd);
+        }
+        else{ //parent
+            wait(NULL);
+        }
+        
         
         }
     else{
+        printf("subshell not detected\n");
         if(command_with_batch(line)){
             launch_batch(line,args, argsc, lwd);
 
