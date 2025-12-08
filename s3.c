@@ -167,6 +167,9 @@ int run_cd(char *args[], int argsc, char lwd[]){
 
     char *target = NULL;
 
+
+    expand_glob_in_params(args, &argsc);
+
     if (!getcwd(cwd, sizeof(cwd))) {
         perror("getcwd");
         return -1;
@@ -889,6 +892,10 @@ int glob_in_operand(char *in){
 void expand_glob_in_params(char *args[], int *argsc) {
     char *expanded[MAX_ARGS];
     int newc = 0;
+    int cd_ins = 0;
+    if(strcmp(args[0],"cd")==0){
+        cd_ins = 1;
+    }
 
     for (int i = 0; i < *argsc; i++) {
         char *operand = args[i];
@@ -915,10 +922,17 @@ void expand_glob_in_params(char *args[], int *argsc) {
         }
     }
 
-    // Copy back
-    for (int i = 0; i < newc; i++)
-        args[i] = expanded[i];
+    if(cd_ins && newc != 2){
+        printf("ERROR invalid input - incorrect input\n");
+    }
 
-    args[newc] = NULL;
-    *argsc = newc;
+
+    // Copy back
+    else{
+        for (int i = 0; i < newc; i++)
+            args[i] = expanded[i];
+
+        args[newc] = NULL;
+        *argsc = newc;
+    }
 }
