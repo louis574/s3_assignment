@@ -662,7 +662,6 @@ char*  sub_shell_split(char line[]){
 }
 
 void sub_shell_child(char line[],char** args, int argsc, char* lwd){
-    printf("forked subshell child\n");
     line = sub_shell_trim(line);
     char* cd = &line[0];
     char* ins = sub_shell_split(line);
@@ -695,7 +694,6 @@ void sub_shell_handler(char line[], char** args, int* argsc, char* lwd){
 
 
     if(sub_shell_detect(line)){
-        printf("sub-shell detected\n");
         int rc = fork();
         if (rc < 0){
             fprintf(stderr, "fork failed\n");
@@ -711,7 +709,6 @@ void sub_shell_handler(char line[], char** args, int* argsc, char* lwd){
         
         }
     else{
-        printf("subshell not detected\n");
         if(command_with_batch(line)){
             launch_batch(line,args, argsc, lwd);
 
@@ -895,7 +892,7 @@ int glob_in_operand(char *in){
         if(in[i] == '"'){
             i = !i;
         }
-        else if(in[i] == '*' && !in_speech){
+        else if((in[i] == '*' || in[i] == '?')&& !in_speech){
             return 1;
         }
         i++;
