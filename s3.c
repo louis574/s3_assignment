@@ -3,16 +3,20 @@
 #include <unistd.h>
 
 
-void set_raw_mode(int enable) {
+///////////////// command history ////////////////////////////
+
+
+//raw mode
+void set_raw_mode(int enable){
     static struct termios oldt, newt;
 
     if (enable) {
         tcgetattr(STDIN_FILENO, &oldt);
         newt = oldt;
 
-        newt.c_lflag &= ~(ICANON | ECHO);   // no line buffering, no echo
-        newt.c_cc[VMIN]  = 1;              // return after 1 byte
-        newt.c_cc[VTIME] = 0;              // no timeout
+        newt.c_lflag &= ~(ICANON | ECHO);   
+        newt.c_cc[VMIN]  = 1;              
+        newt.c_cc[VTIME] = 0;              
 
         tcsetattr(STDIN_FILENO, TCSANOW, &newt);
     } else {
@@ -22,17 +26,17 @@ void set_raw_mode(int enable) {
 
 
 
-// Create a new node with a copy of the given string
-Node *create_node(const char *str) {
+//Create a new node with a copy of the given string
+Node *create_node(const char *str){
     Node *node = malloc(sizeof(Node));
-    node->data = strdup(str);   // allocates and copies string
+    node->data = strdup(str);   
     node->next = NULL;
     return node;
 }
 
 
-// Append node to the end of the list
-void append(LinkedStack *list, const char *str) {
+//append node at the end of the list
+void append(LinkedStack *list, const char *str){
 
     if (list->head == NULL) {
         list->head = create_node(str);
@@ -47,30 +51,25 @@ void append(LinkedStack *list, const char *str) {
     list ->size ++;
 }
 
-void debug_print_stack(LinkedStack *history) 
-{
-    Node *curr = history->head;
-    while (curr) {printf("[%s]  ",curr->data); curr = curr->next;}
-    printf("\n");
-}
-
 // delete line from terminal
-void delete_line(char line[], int len) {
+void delete_line(char line[], int len){
     for (int i = 0; i < len; i++) {
         printf("\b \b");
     }    
-    fflush(stdout); // ensure terminal updates immediately
+    fflush(stdout);
 }
 
-// Print line to terminal
-void print_line(char line[], int len) {
+//Print line to terminal
+void print_line(char line[], int len){
     for (int i = 0; i < len; i++) {
         putchar(line[i]);
     }
-    fflush(stdout); // ensure immediate display
+    fflush(stdout);
 }
 
-Node* getnode(LinkedStack* history) {
+
+//returns pointer to end node in stack
+Node* getnode(LinkedStack* history){
     Node *cur = history->head;
     int steps = 1;
 
@@ -79,7 +78,7 @@ Node* getnode(LinkedStack* history) {
         steps++;
     }
 
-    return cur; // may be NULL only if history is empty
+    return cur;
 }
 
 void read_command_line(char line[], LinkedStack* history)
@@ -99,58 +98,47 @@ void read_command_line(char line[], LinkedStack* history)
         c = getchar();
 
         if (c == '\n' || c == '\r') {
-            // end of input
             putchar('\n');
             newline = 1;
         } else if (c == 0x7f || c == '\b') {
-            // backspace
             if (pos > 0) {
                 pos--;
                 line[pos] = '\0';
                 printf("\b \b");
                 fflush(stdout);
             }
-        } else if (c == 0x1B) {
+        } else if (c == 0x1B){
             // ESC sequence
             int c2 = getchar();
-            if (c2 == '[') {
+            if (c2 == '['){
                 int c3 = getchar();
                 if (history->head) {
-                    if (c3 == 'A') {          // Up arrow
-                        
-                        // save what line is right now then access one above
-                        // the zero input of the stack is always current
+                    if (c3 == 'A'){//up arrow
+                    
                         if (history -> count == 0 ){
-                            //printf("%s", line);
                             strcpy(history->currentline, line);
                         }
                         if (history->size > history->count)
                             history -> count ++;
                         Node *cur = getnode(history);
-                        //printf("Count: %d, Size: %d \n", history -> count, history->size );
-                        //debug_print_stack(history);
                         
                         delete_line(line, pos);
                         strcpy (line, cur->data);
                         pos = strlen(line);
                         line[pos] = '\0';
                         print_line(line, pos);
-                    } else if (c3 == 'B') {   // Down arrow                    
+                    } else if (c3 == 'B'){   //down arrow                    
                         
                         if (history -> count == 1 ){
                             delete_line(line, pos);
                             strcpy(line, history -> currentline);
                             history -> count --;
-                            //printf("Count: %d, Size: %d \n", history -> count, history->size );
-                            //debug_print_stack(history);
                             pos = strlen(line);
                             line[pos] = '\0';
                             print_line(line,pos);
                         }
                         else if (history -> count > 1 ){
                             history -> count --;
-                            //printf("Count: %d, Size: %d \n", history -> count, history->size );
-                            //debug_print_stack(history);
                             Node *cur = getnode(history);
                             delete_line(line, pos);
                             strcpy (line, cur->data);
@@ -162,11 +150,11 @@ void read_command_line(char line[], LinkedStack* history)
             }
             }
         } else {
-            // normal character
-            if (pos < MAX_LINE - 1) {
+            //normal character
+            if (pos < MAX_LINE - 1){
                 line[pos++] = (char)c;
                 line[pos] = '\0';
-                putchar(c);      // manual echo
+                putchar(c);     
                 fflush(stdout);
             }
         }
@@ -174,16 +162,20 @@ void read_command_line(char line[], LinkedStack* history)
 
     set_raw_mode(0);
 
-    // terminate the string safely
+    //terminate the string safely with null
     line[pos] = '\0';
 
-    // store in history
+    //store in history
     append(history, line);
 }
 
+
+
+/////////////////////////////////////////////////////////////
+
 void construct_shell_prompt(char shell_prompt[])
 {
-    // get the current working directory
+    //get current working directory
 
     char cwd[MAX_PATH];
     if (getcwd(cwd, sizeof(cwd)) == NULL){
@@ -196,16 +188,17 @@ void construct_shell_prompt(char shell_prompt[])
 
 
 
-
+//parses command into an array
 void my_parse_cmd(char line[], char *args[], int *argsc){
     char space = ' ';
     generic_tokeniser(line,space,args,argsc);
 }
 
-///Launch related functions
+//launch functions
 void child(char* args[], int argsc)
 {
-    ///Implement this function:
+    //globbing
+    //expands any params with * and then calls execvp
     expand_glob_in_params(args,&argsc);
     for(int i = 0; i < argsc;i++){
         args[i] = quote_remover(args[i]);
@@ -218,24 +211,16 @@ void child(char* args[], int argsc)
         fprintf(stderr, "execvp launch failed\n");
         exit(1);
     }
-
-
-    ///Use execvp to load the binary 
-    ///of the command specified in args[ARG_PROGNAME].
-    ///For reference, see the code in lecture 3.
 }
 
 void launch_program(char* args[], int argsc)
 {
-    ///Implement this function:
+    //exit command
     if(argsc == 1 && strcmp(args[0],"exit") == 0){
         exit(0);
     }
 
-    ///fork() a child process.
-    ///In the child part of the code,
-    ///call child(args, argv)
-    ///For reference, see the code in lecture 2.
+    //forking child process
     int rc = fork();
     if (rc < 0){
         fprintf(stderr, "fork failed\n");
@@ -248,10 +233,6 @@ void launch_program(char* args[], int argsc)
         wait(NULL);
     }
 
-    ///Handle the 'exit' command;
-    ///so that the shell, not the child process,
-    ///exits.
-
 }
 
 void execute_program(char* args[], int argsc)
@@ -261,6 +242,8 @@ void execute_program(char* args[], int argsc)
 
 }
 
+
+//launches normal and redirected commands
 void launch_cmd(char line[],char* args[], int* argsc, int child){
 
     if(command_with_redirection(line)){
@@ -275,8 +258,7 @@ void launch_cmd(char line[],char* args[], int* argsc, int child){
         }
         else{
             execute_redirection(args, *argsc);
-        }
-        reap();            
+        }          
     }
 
     else{
@@ -296,8 +278,6 @@ void launch_cmd(char line[],char* args[], int* argsc, int child){
         else{
             execute_program(args, *argsc);
         }
-
-        reap();
     }
 }
 
@@ -312,6 +292,8 @@ void launch_cmd(char line[],char* args[], int* argsc, int child){
 //use getcwd to print the current directory the user is in
 // maintain the current directory in construct shell prompt
 
+
+//check if cd command
 int is_cd(char line[]){
     if (line[0] == 'c' && line[1] == 'd' && line[2] == ' '){
         return 1;
@@ -324,6 +306,9 @@ int is_cd(char line[]){
 // cd - assign pwd to cwd
 // cd <path> - go to that path 
 
+
+
+//executes cd command
 int run_cd(char *args[], int argsc, char lwd[]){
     // work out what type of cd command this is 
     char cwd[MAX_PATH];
@@ -355,6 +340,7 @@ int run_cd(char *args[], int argsc, char lwd[]){
                         
         }
     }
+    //return to previous
     else if (strcmp(args[1],"-") == 0) {
         if (lwd[0] == '\0'){
             printf("no previous directory");
@@ -378,10 +364,12 @@ int run_cd(char *args[], int argsc, char lwd[]){
     return 0;
 }
 
+
+//sets up lwd buffer
 void init_lwd(char lwd[]){
     char cwd[MAX_PATH];
 
-    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+    if (getcwd(cwd, sizeof(cwd)) == NULL){
         lwd[0] = '\0';
         return;
     }
@@ -399,7 +387,7 @@ void init_lwd(char lwd[]){
 /////////////////////// Pipes ////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-
+//detects if command has pipes - ignores if in ""
 int command_with_pipe(char line[]){
     int in_speech = 0;
     
@@ -418,6 +406,8 @@ int command_with_pipe(char line[]){
     return 0;
 }
 
+
+//parses, sets up pipes, and launches instructions for pipes
 void launch_pipe(char line[], char* args[], int* argsc){
 
     char* pipe_args[MAX_PIPE_LEN];
@@ -430,7 +420,7 @@ void launch_pipe(char line[], char* args[], int* argsc){
     int old_pipe[2];
     
     
-    
+    //loop that opens pipes and passes relevent read write ends into each child
     for(int i = 0; i < pipe_argsc; i++){
         if(i < pipe_argsc-1){
             pipe(new_pipe);
@@ -510,7 +500,7 @@ void launch_pipe(char line[], char* args[], int* argsc){
 
 
 
-
+//launches redirection
 void launch_program_with_redirection(char *args[], int argsc){
     char direction,operation;
 
@@ -649,6 +639,7 @@ void child_with_output_redirected(char *instruction[], char* file, char operatio
 
 }
 
+//parses reditect, making direction and whether it isappend or overwrite version
 void redirect_parse(char *args[], int argsc, char* direction, char* operation){
     char *redirect = args[argsc-2];
     if(redirect[0] == '<'){
@@ -667,7 +658,7 @@ void redirect_parse(char *args[], int argsc, char* direction, char* operation){
 }
 
 
-
+//detects if command with redirection, ignores in in ""
 int command_with_redirection(char line[]){
     int in_speech = 0;
     
@@ -692,7 +683,7 @@ int command_with_redirection(char line[]){
 ///////////////////////// Batching ////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
-
+//detects if command is batched, ignores if in ""
 int command_with_batch(char line[]){
     int in_speech = 0;
     int in_sub_shell = 0;
@@ -719,6 +710,7 @@ int command_with_batch(char line[]){
     }
     return 0;
 }
+
 
 void launch_batch(char line[], char* args[], int* argsc, char* lwd){
 
@@ -758,7 +750,7 @@ void launch_batch(char line[], char* args[], int* argsc, char* lwd){
 
 
 
-
+//detects if current command is subshell
 int sub_shell_detect(char line[]){
     line = whitespace_trim(&line[0]);
 
@@ -791,6 +783,8 @@ int sub_shell_detect(char line[]){
     }
 }
 
+
+//trims whitespace
 char* sub_shell_trim(char line[]){
     line = whitespace_trim(&line[0]);
     line[strlen(line)-1] = '\0';
@@ -799,7 +793,7 @@ char* sub_shell_trim(char line[]){
 
 
 
-
+//splits up the sub_shell into cd and instructions (which can be batched)
 char*  sub_shell_split(char line[]){
 
     printf("splitting: %s\n", line);
@@ -824,13 +818,14 @@ char*  sub_shell_split(char line[]){
     }
 }
 
+
+//calls subshell split and changes directory, they calls subshell handler on instructions
+//to fascilitate execution of nested subshells
 void sub_shell_child(char line[],char** args, int argsc, char* lwd){
     line = sub_shell_trim(line);
     char* cd = &line[0];
     char* ins = sub_shell_split(line);
-    //char cwd[MAX_PATH];
     char tmp_cwd[MAX_PATH];
-    //getcwd(cwd, sizeof(cwd));
     getcwd(tmp_cwd, sizeof(tmp_cwd));
     my_parse_cmd(cd, args, &argsc);
     if (run_cd(args, argsc, lwd)  == -1){
@@ -841,7 +836,6 @@ void sub_shell_child(char line[],char** args, int argsc, char* lwd){
 
     sub_shell_handler(ins,args, &argsc, lwd);
 
-    //chdir(tmp_cwd);
 
     exit(0);
 
@@ -851,7 +845,8 @@ void sub_shell_child(char line[],char** args, int argsc, char* lwd){
 
 }
 
-
+//looks for subshell and sends it to appropriate handler function
+//if not sends to batch handler for it to handle
 void sub_shell_handler(char line[], char** args, int* argsc, char* lwd){
 
 
@@ -914,7 +909,7 @@ void sub_shell_handler(char line[], char** args, int* argsc, char* lwd){
 ///////////////////////////////////////////////////////////////////////
 
 
-
+//tokeniser we developed to enhance parsing so that characters witin "" would be ignored
 void generic_tokeniser(char line[], char parse_char, char* args[], int* argsc){
     int in_speech = 0;
     int string_start = 1;
@@ -959,6 +954,9 @@ void generic_tokeniser(char line[], char parse_char, char* args[], int* argsc){
 
 }
 
+
+//tokenises batched commands but if one of those is a subshell is doesnt tokenise on the semi-colons
+//within that subshell, crucial for correct implementation of batched subshells
 void sub_shell_aware_batch_tokeniser(char line[], char* args[], int* argsc){
     int in_speech = 0;
     int in_sub_shell = 0;
@@ -1012,6 +1010,8 @@ void sub_shell_aware_batch_tokeniser(char line[], char* args[], int* argsc){
 
 }
 
+//clips whitespace from start/end on user inputs, used a lot
+
 
 char* whitespace_trim(char* start){
     int i = 0;
@@ -1033,6 +1033,7 @@ char* whitespace_trim(char* start){
 }
 
 
+//removes quotes from around an operand, allows user to input a whole string into a function and it be 'one word'
 char* quote_remover(char* string){
     if(string[0] == '"'){
         int len = strlen(string);
@@ -1047,7 +1048,7 @@ char* quote_remover(char* string){
 ////////////////////////////////////////////////////
 ////////////////////// globbing ///////////////////
 //////////////////////////////////////////////////
-
+//checks if globbing is in command
 int glob_in_operand(char *in){
     int i = 0;
     int in_speech = 0;
@@ -1063,7 +1064,7 @@ int glob_in_operand(char *in){
     return 0;
 }
 
-
+//exbands glob, returns error if multiple
 void expand_glob_in_params(char *args[], int *argsc) {
     char *expanded[MAX_ARGS];
     int newc = 0;
@@ -1072,20 +1073,20 @@ void expand_glob_in_params(char *args[], int *argsc) {
         cd_ins = 1;
     }
 
-    for (int i = 0; i < *argsc; i++) {
+    for (int i = 0; i < *argsc; i++){
         char *operand = args[i];
 
-        if (glob_in_operand(operand)) {
+        if (glob_in_operand(operand)){
             glob_t unpacked;
 
             int ret = glob(operand, 0, NULL, &unpacked);
 
-            if (ret == 0) {
+            if (ret == 0){
 
                 for (size_t j = 0; j < unpacked.gl_pathc; j++) {
                     expanded[newc++] = strdup(unpacked.gl_pathv[j]);
                 }
-            } else {
+            } else{
 
                 expanded[newc++] = operand;
             }
@@ -1102,7 +1103,7 @@ void expand_glob_in_params(char *args[], int *argsc) {
     }
 
 
-    // Copy back
+    //Copy back
     else{
         for (int i = 0; i < newc; i++)
             args[i] = expanded[i];

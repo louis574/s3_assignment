@@ -40,9 +40,11 @@ static inline void reap()
     wait(NULL);
 }
 
+
+//struct for command history
 typedef struct Node {
-    char *data;         // string stored in the node
-    struct Node *next;  // pointer to next node
+    char *data;
+    struct Node *next;  
     struct Node *prev;
 } Node;
 
@@ -78,42 +80,48 @@ int is_cd(char line[]);
 int run_cd(char *args[], int argsc, char lwd[]);
 void init_lwd(char lwd[]);
 
+
+//rediricts
+
+
 void redirect_parse(char *args[], int argsc, char* direction, char* operation);
+void execute_redirection(char *args[], int argsc);
+
+////helper functions
+
 void generic_tokeniser(char line[], char parse_char, char* args[], int* argsc);
 char* whitespace_trim(char* start);
 void my_parse_cmd(char line[], char *args[], int *argsc);
 char* quote_remover(char* string);
+
+
+//pipes
+
 int command_with_pipe(char line[]);
 void launch_cmd(char line[],char* args[], int* argsc, int child);
 void launch_pipe(char line[], char* args[], int* argsc);
 void execute_program(char* args[], int argsc);
-void execute_redirection(char *args[], int argsc);
+
+
+//batches
+
 int command_with_batch(char line[]);
 void launch_batch(char line[], char* args[], int* argsc, char* lwd);
 
-
+//subshells
 
 int sub_shell_detect(char line[]);
-
 char* sub_shell_trim(char line[]);
-
-
-
-
 char*  sub_shell_split(char line[]);
-
 void sub_shell_child(char line[],char** args, int argsc, char* lwd);
-
-
 void sub_shell_handler(char line[], char** args, int* argsc, char* lwd);
-
 void sub_shell_aware_batch_tokeniser(char line[], char* args[], int* argsc);
 
 
 
+//globbing
+
 int glob_in_operand(char *in);
-
-
 void expand_glob_in_params(char *args[], int *argsc);
 
 
