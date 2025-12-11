@@ -2,6 +2,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+
 void set_raw_mode(int enable) {
     static struct termios oldt, newt;
 
