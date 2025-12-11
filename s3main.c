@@ -17,9 +17,14 @@ int main(int argc, char *argv[]){
 
     init_lwd(lwd);
 
-    while (1) {
+    LinkedStack history = {0, 0, NULL, malloc(sizeof(char*))};
 
-        read_command_line(line);
+
+
+    while (1) {
+        history.count = 0;
+        memset(line, 0, sizeof(line));
+        read_command_line(line, &history);
 
 
         if(command_with_batch(line) && !sub_shell_detect(line)){

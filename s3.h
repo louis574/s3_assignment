@@ -40,8 +40,25 @@ static inline void reap()
     wait(NULL);
 }
 
+typedef struct Node {
+    char *data;         // string stored in the node
+    struct Node *next;  // pointer to next node
+    struct Node *prev;
+} Node;
+
+
+//for the current line before its entered.
+typedef struct List {
+    int size;
+    int count;
+    Node *head;
+    char *currentline;
+} LinkedStack;
+
+
+
 ///Shell I/O and related functions (add more as appropriate)
-void read_command_line(char line[]);
+void read_command_line(char line[], LinkedStack* history);
 void construct_shell_prompt(char shell_prompt[]);
 void parse_command(char line[], char *args[], int *argsc);
 int command_with_redirection(char line[]);
@@ -98,6 +115,9 @@ int glob_in_operand(char *in);
 
 
 void expand_glob_in_params(char *args[], int *argsc);
+
+
+
 
 
 #endif

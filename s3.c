@@ -1,4 +1,184 @@
 #include "s3.h"
+#include <termios.h>
+#include <unistd.h>
+
+void set_raw_mode(int enable) {
+    static struct termios oldt, newt;
+
+    if (enable) {
+        tcgetattr(STDIN_FILENO, &oldt);
+        newt = oldt;
+
+        newt.c_lflag &= ~(ICANON | ECHO);   // no line buffering, no echo
+        newt.c_cc[VMIN]  = 1;              // return after 1 byte
+        newt.c_cc[VTIME] = 0;              // no timeout
+
+        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    } else {
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    }
+}
+
+
+
+// Create a new node with a copy of the given string
+Node *create_node(const char *str) {
+    Node *node = malloc(sizeof(Node));
+    node->data = strdup(str);   // allocates and copies string
+    node->next = NULL;
+    return node;
+}
+
+
+// Append node to the end of the list
+void append(LinkedStack *list, const char *str) {
+
+    if (list->head == NULL) {
+        list->head = create_node(str);
+        list->size++;
+        return;
+    }
+
+    Node *node = malloc(sizeof(Node));
+    node->data = strdup(str);   // allocates and copies string
+    node->next = list->head;
+    list->head = node;
+    list ->size ++;
+}
+
+void debug_print_stack(LinkedStack *history) 
+{
+    Node *curr = history->head;
+    while (curr) {printf("[%s]  ",curr->data); curr = curr->next;}
+    printf("\n");
+}
+
+// delete line from terminal
+void delete_line(char line[], int len) {
+    for (int i = 0; i < len; i++) {
+        printf("\b \b");
+    }    
+    fflush(stdout); // ensure terminal updates immediately
+}
+
+// Print line to terminal
+void print_line(char line[], int len) {
+    for (int i = 0; i < len; i++) {
+        putchar(line[i]);
+    }
+    fflush(stdout); // ensure immediate display
+}
+
+Node* getnode(LinkedStack* history) {
+    Node *cur = history->head;
+    int steps = 1;
+
+    while (cur && cur->next && steps < history->count) {
+        cur = cur->next;
+        steps++;
+    }
+
+    return cur; // may be NULL only if history is empty
+}
+
+void read_command_line(char line[], LinkedStack* history)
+{
+    char shell_prompt[MAX_PROMPT_LEN];
+    construct_shell_prompt(shell_prompt);
+    printf("%s", shell_prompt);
+    fflush(stdout);
+
+    history -> count = 0;
+    set_raw_mode(1);
+
+    int c;
+    int pos = 0;
+    int newline = 0;
+    while (newline == 0) {
+        c = getchar();
+
+        if (c == '\n' || c == '\r') {
+            // end of input
+            putchar('\n');
+            newline = 1;
+        } else if (c == 0x7f || c == '\b') {
+            // backspace
+            if (pos > 0) {
+                pos--;
+                line[pos] = '\0';
+                printf("\b \b");
+                fflush(stdout);
+            }
+        } else if (c == 0x1B) {
+            // ESC sequence
+            int c2 = getchar();
+            if (c2 == '[') {
+                int c3 = getchar();
+                if (history->head) {
+                    if (c3 == 'A') {          // Up arrow
+                        
+                        // save what line is right now then access one above
+                        // the zero input of the stack is always current
+                        if (history -> count == 0 ){
+                            //printf("%s", line);
+                            strcpy(history->currentline, line);
+                        }
+                        if (history->size > history->count)
+                            history -> count ++;
+                        Node *cur = getnode(history);
+                        //printf("Count: %d, Size: %d \n", history -> count, history->size );
+                        //debug_print_stack(history);
+                        
+                        delete_line(line, pos);
+                        strcpy (line, cur->data);
+                        pos = strlen(line);
+                        line[pos] = '\0';
+                        print_line(line, pos);
+                    } else if (c3 == 'B') {   // Down arrow                    
+                        
+                        if (history -> count == 1 ){
+                            delete_line(line, pos);
+                            strcpy(line, history -> currentline);
+                            history -> count --;
+                            //printf("Count: %d, Size: %d \n", history -> count, history->size );
+                            //debug_print_stack(history);
+                            pos = strlen(line);
+                            line[pos] = '\0';
+                            print_line(line,pos);
+                        }
+                        else if (history -> count > 1 ){
+                            history -> count --;
+                            //printf("Count: %d, Size: %d \n", history -> count, history->size );
+                            //debug_print_stack(history);
+                            Node *cur = getnode(history);
+                            delete_line(line, pos);
+                            strcpy (line, cur->data);
+                            pos = strlen(line);
+                            line[pos] = '\0';
+                            print_line(line, pos);
+                    }
+                    }
+            }
+            }
+        } else {
+            // normal character
+            if (pos < MAX_LINE - 1) {
+                line[pos++] = (char)c;
+                line[pos] = '\0';
+                putchar(c);      // manual echo
+                fflush(stdout);
+            }
+        }
+    }
+
+    set_raw_mode(0);
+
+    // terminate the string safely
+    line[pos] = '\0';
+
+    // store in history
+    append(history, line);
+}
 
 void construct_shell_prompt(char shell_prompt[])
 {
@@ -12,25 +192,7 @@ void construct_shell_prompt(char shell_prompt[])
     snprintf(shell_prompt, MAX_PROMPT_LEN, "[s3:%s]$ ", cwd);
 }
 
-///Prints a shell prompt and reads input from the user
-void read_command_line(char line[])
-{
-    char shell_prompt[MAX_PROMPT_LEN];
-    construct_shell_prompt(shell_prompt);
-    printf("%s", shell_prompt);
 
-    ///See man page of fgets(...)
-    if (fgets(line, MAX_LINE, stdin) == NULL)
-    {
-        perror("fgets failed");
-        exit(1);
-    }
-    ///Remove newline (enter)
-    
-    if(line[strlen(line)-1] = '\n'){
-        line[strlen(line) - 1] = '\0';
-    }
-}
 
 
 
