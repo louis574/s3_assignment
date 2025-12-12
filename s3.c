@@ -295,7 +295,7 @@ void launch_cmd(char line[],char* args[], int* argsc, int child){
 
 //check if cd command
 int is_cd(char line[]){
-    if (line[0] == 'c' && line[1] == 'd' && line[2] == ' '){
+    if (line[0] == 'c' && line[1] == 'd'){
         return 1;
     }
     return 0;
@@ -798,7 +798,7 @@ char*  sub_shell_split(char line[]){
 
     printf("splitting: %s\n", line);
     
-    if(line[0] == 'c' && line[1] == 'd' && line[2] == ' ' ){
+    if(line[0] == 'c' && line[1] == 'd'){
         int i = 3;
         while(line[i] != '\0' && line[i] != ';'){
             i++;
@@ -1098,7 +1098,7 @@ void expand_glob_in_params(char *args[], int *argsc) {
         }
     }
 
-    if(cd_ins && newc != 2){
+    if(cd_ins && newc > 2){
         printf("ERROR invalid input - incorrect input\n");
     }
 
